@@ -220,13 +220,13 @@ export const MediaPlayer = forwardRef<PlayerHandle, MediaPlayerProps>(function M
     if (!streamUrl) return;
     let active = true;
     let instance: StreamPlayer | null = null;
-    const readyPlayer = () => { if (instance && !ready.current) mediaReady(instance); };
+    const readyPlayer = () => { if (instance && !ready.current && Number.isFinite(instance.duration) && instance.duration > 0) mediaReady(instance); };
     const updated = () => { if (instance) updateTime(instance); };
-    const durationChanged = () => { if (instance) updateDuration(instance); };
+    const durationChanged = () => { if (!ready.current) readyPlayer(); else if (instance) updateDuration(instance); };
     const changed = () => { if (instance) syncMedia(instance); };
     const seeked = () => { updated(); changed(); };
     const played = () => { changed(); callbacks.current.onPlay(); };
-    const resumed = () => { if (instance) syncMedia(instance, instance.ended ? "ended" : instance.paused ? "paused" : "playing"); };
+    const resumed = () => { readyPlayer(); if (instance) syncMedia(instance, instance.ended ? "ended" : instance.paused ? "paused" : "playing"); };
     const waiting = () => { if (instance) buffering(instance); };
     const failed = () => { if (active) { callbacks.current.onError("Hosted playback is unavailable. Using the original recording."); setUseOriginal(true); } };
     const listeners: [string, () => void][] = [["timeupdate", updated], ["seeked", seeked], ["durationchange", durationChanged], ["loadedmetadata", readyPlayer], ["play", played], ["playing", resumed], ["canplay", resumed], ["waiting", waiting], ["pause", changed], ["ended", changed], ["volumechange", changed], ["error", failed]];
