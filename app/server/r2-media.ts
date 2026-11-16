@@ -39,15 +39,17 @@ export class R2Media implements MediaStore {
     return {byteLength:item.size,sha256:hex(checksum),etag:item.etag};
   }
   async read(key: string,request: Request,mime:string) {
-    const item=await this.bucket.get(key,{range:request.headers}); if(!item) throw new HttpError(404,"Recording not found");
+    const ranged=request.headers.has("Range");
+    const item=await this.bucket.get(key,ranged?{range:request.headers}:undefined); if(!item) throw new HttpError(404,"Recording not found");
     const headers=new Headers({"Content-Type":mime,"Accept-Ranges":"bytes","Cache-Control":"private, no-store"});
     let status=200; let length=item.size;
-    if(item.range) {
+    if(ranged&&item.range) {
       const range=item.range as {offset:number;length:number};
       const start=range.offset||0;length=range.length??item.size-start;
       headers.set("Content-Range",`bytes ${start}-${start+length-1}/${item.size}`);status=206;
     }
     headers.set("Content-Length",String(length));
+    if(request.method==="HEAD") await item.body.cancel();
     return new Response(request.method==="HEAD"?null:item.body,{status,headers});
   }
   async source(key:string) {return {url:await this.signed(key,"GET")};}

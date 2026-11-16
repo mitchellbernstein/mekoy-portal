@@ -16,7 +16,9 @@ async function cloudflare(runtime:Runtime,path:string,body:unknown,method="POST"
   return result.result;
 }
 export async function ai(runtime:Runtime,model:string,input:unknown) {return cloudflare(runtime,`ai/run/${model}`,input);}
-export function extractJson(text:string) {
+export function extractJson(value:unknown):unknown {
+  if(value!==null&&typeof value==="object"&&!Array.isArray(value)) return value;
+  const text=z.string().parse(value);
   const fenced=/```(?:json)?\s*([\s\S]*?)```/.exec(text);return JSON.parse(fenced?fenced[1]:text);
 }
 function chunks(words:Word[]) {
