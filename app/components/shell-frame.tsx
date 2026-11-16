@@ -6,7 +6,7 @@ import { WindowChrome, type ShellHistory, type WorkspaceSidebarOverride } from "
 import { useReducedMotionPreference } from "./use-reduced-motion";
 import "../sidebar-motion.css";
 
-export function ShellFrame({ sidebar, history, desktop = false, className = "", scrollRef, children }: { sidebar: WorkspaceSidebarOverride; history?: ShellHistory; desktop?: boolean; className?: string; scrollRef?: RefObject<HTMLDivElement | null>; children: ReactNode }) {
+export function ShellFrame({ sidebar, header, history, desktop = false, className = "", scrollRef, children }: { sidebar: WorkspaceSidebarOverride; header: ReactNode; history?: ShellHistory; desktop?: boolean; className?: string; scrollRef?: RefObject<HTMLDivElement | null>; children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [narrow, setNarrow] = useState(false);
@@ -53,6 +53,9 @@ export function ShellFrame({ sidebar, history, desktop = false, className = "", 
     <aside ref={aside} id="workspace-navigation" className={`sidebar${drawerOpen ? " is-open" : ""}`} role={drawerOpen ? "dialog" : undefined} aria-modal={drawerOpen || undefined} aria-label={sidebar.label} inert={hidden}>
       <div className="sidebar-body">{sidebar.content}</div>
     </aside>
-    <motion.div className="workspace-main" ref={scrollRef} inert={drawer && drawerOpen} layout={!reduced && !drawer ? "position" : false} transition={{ layout: { duration: .22, ease: [.2, .8, .2, 1] } }}>{children}</motion.div>
+    <motion.div className="workspace-content" layout={!reduced && !drawer ? "position" : false} transition={{ layout: { duration: .22, ease: [.2, .8, .2, 1] } }}>
+      <div className="workspace-chrome" inert={drawer && drawerOpen}>{header}</div>
+      <div className="workspace-main" ref={scrollRef} inert={drawer && drawerOpen}>{children}</div>
+    </motion.div>
   </div>;
 }

@@ -1,30 +1,39 @@
 .workspace-shell { transition: none; }
 .workspace-shell.sidebar-collapsed { grid-template-columns: 0 minmax(0, 1fr); }
+.workspace-content { display: flex; flex-direction: column; gap: 8px; min-width: 0; min-height: 0; height: calc(100dvh - 16px); }
+/* Match the content scrollbar gutter so discussion tabs stay aligned with their column. */
+.workspace-chrome { flex-shrink: 0; min-width: 0; border: 1px solid transparent; overflow: hidden; scrollbar-gutter: stable; }
 .workspace-shell > .sidebar { display: flex; top: 8px; width: var(--sidebar); min-width: 0; height: calc(100dvh - 16px); padding: 44px 14px 0; overflow: clip; opacity: 1; transform: translateX(0); visibility: visible; transition: opacity 160ms ease, transform 220ms cubic-bezier(.2, .8, .2, 1), visibility 0s; }
 .sidebar-body { display: flex; flex-direction: column; width: 100%; min-height: 0; flex: 1; }
 .sidebar-body > nav { min-height: 0; overflow-y: auto; overscroll-behavior: contain; flex: 1; margin: 0 -7px; padding: 0 7px 20px; }
 .workspace-shell > .sidebar[inert] { pointer-events: none; opacity: 0; transform: translateX(-16px); visibility: hidden; transition-delay: 0s, 0s, 220ms; }
-.window-chrome { position: fixed; top: 13px; left: 16px; z-index: 30; display: flex; align-items: center; gap: 3px; height: 28px; -webkit-app-region: no-drag; }
+.window-chrome { position: fixed; top: 11px; left: 16px; z-index: 30; display: flex; align-items: center; gap: 3px; height: 28px; -webkit-app-region: no-drag; }
 .window-chrome .icon-button { width: 28px; height: 28px; -webkit-app-region: no-drag; }
 .window-chrome .desktop-history { display: flex; align-items: center; gap: 1px; }
 .desktop-history > button:first-child svg { transform: rotate(180deg); }
 .desktop-history > button:disabled { opacity: .3; }
 .window-chrome .desktop-sidebar-toggle { margin-left: 3px; }
-.workspace-shell .topbar { height: 42px; min-height: 42px; padding: 0 24px; }
-.workspace-shell .topbar-main { display: flex; align-items: center; gap: 14px; width: 100%; min-width: 0; min-height: 40px; }
-.workspace-shell .video-topbar { height: auto; padding: 0; }
-.workspace-shell .video-topbar .topbar-main { min-height: 42px; padding: 0 24px; }
+.workspace-shell .workspace-chrome .topbar { position: relative; height: auto; min-height: 32px; padding: 0 24px; background: transparent; }
+.workspace-shell .workspace-chrome .topbar-main { display: flex; align-items: center; gap: 14px; width: 100%; min-width: 0; min-height: 32px; }
+.workspace-shell .workspace-chrome .video-topbar { height: auto; padding: 0; }
+.workspace-shell .workspace-chrome .video-topbar .topbar-main { padding: 0 24px; }
 .workspace-shell > .mobile-menu { display: none; }
-.workspace-shell.drawer-open > .workspace-main { overflow: hidden; }
+.workspace-shell.drawer-open .workspace-main { overflow: hidden; }
+
+@media (min-width: 761px) {
+  .workspace-shell.sidebar-collapsed:not(.desktop-shell) .topbar-main { padding-left: 36px; }
+  .workspace-shell.sidebar-collapsed:not(.desktop-shell) .video-topbar .topbar-main { padding-left: 60px; }
+}
 
 @media (max-width: 760px) {
   .workspace-shell:not(.desktop-shell) { grid-template-columns: minmax(0, 1fr); }
+  .workspace-shell:not(.desktop-shell) > .workspace-content { height: 100dvh; }
   .workspace-shell:not(.desktop-shell) > .window-chrome { display: none; }
   .workspace-shell:not(.desktop-shell) > .mobile-menu { position: fixed; top: 7px; left: 13px; z-index: 30; display: inline-flex; }
   .workspace-shell:not(.desktop-shell) > .sidebar { position: fixed; top: 0; left: 0; z-index: 45; width: min(280px, calc(100vw - 48px)); height: 100dvh; padding-top: 56px; visibility: hidden; opacity: 0; transform: translateX(-100%); transition: opacity 140ms ease, transform 220ms cubic-bezier(.2, .8, .2, 1), visibility 0s linear 220ms; }
   .workspace-shell:not(.desktop-shell) > .sidebar.is-open { visibility: visible; opacity: 1; transform: translateX(0); transition-delay: 0s; }
   .workspace-shell:not(.desktop-shell) .topbar-main { padding-left: 34px; }
-  .workspace-shell:not(.desktop-shell) .video-topbar .topbar-main { padding-left: 58px; }
+  .workspace-shell:not(.desktop-shell) .workspace-chrome .video-topbar .topbar-main { padding: 8px 17px 8px 58px; }
   .workspace-shell .nav-scrim { display: block; z-index: 40; }
 }
 

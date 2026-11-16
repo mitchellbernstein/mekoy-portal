@@ -75,7 +75,7 @@ export function WorkspaceShell({ bootstrap, serverOrigin, library, desktop }: Wo
   }
 
   const sidebar = <>
-        <div className="sidebar-identity"><Link className="wordmark" to={desktop ? "/home" : "/"}><span className="brand-mark"><Icon name="video" size={19} /></span><span>Video workspace</span></Link><NotificationsMenu connected/><button type="button" className="icon-button" aria-label="Search" title={applePlatform ? "Search (⌘K)" : "Search (Ctrl+K)"} onClick={() => setSearchOpen(true)} aria-haspopup="dialog" aria-keyshortcuts={applePlatform ? "Meta+K" : "Control+K"}><Icon name="search" size={17}/></button></div>
+        <div className="sidebar-identity"><Link className="wordmark" to={desktop ? "/home" : "/"}><span className="brand-mark"><Icon name="video" size={19} /></span><span>McCoy</span></Link><NotificationsMenu connected/><button type="button" className="icon-button" aria-label="Search" title={applePlatform ? "Search (⌘K)" : "Search (Ctrl+K)"} onClick={() => setSearchOpen(true)} aria-haspopup="dialog" aria-keyshortcuts={applePlatform ? "Meta+K" : "Control+K"}><Icon name="search" size={17}/></button></div>
         <nav>{desktop ? desktop.navigation({ onUpload: () => setUploadOpen(true) }) : <div className="primary-nav"><NavLink to="/" end><Icon name="home"/>Home</NavLink><NavLink to="/my-videos"><Icon name="video"/>My videos</NavLink><NavLink to="/my-notes"><Icon name="edit"/>My notes</NavLink></div>}
           <AgentNavigation/>
           {(bootstrap.account.canOrganize||bootstrap.teams.length>0)&&<NavSection title="Teams" onCreate={bootstrap.account.canOrganize?() => setCreate("team"):undefined}>
@@ -91,13 +91,13 @@ export function WorkspaceShell({ bootstrap, serverOrigin, library, desktop }: Wo
   </>;
   return (
     <>
-    <ShellFrame desktop={!!desktop} history={desktop?.history} scrollRef={scrollContainer} sidebar={desktop?.sidebar || { label: "Workspace navigation", content: sidebar }}>
+    <ShellFrame desktop={!!desktop} history={desktop?.history} scrollRef={scrollContainer} sidebar={desktop?.sidebar || { label: "Workspace navigation", content: sidebar }} header={
         <header className={`topbar${isVideo && !desktop?.page ? " video-topbar" : ""}`}>
           <div className="topbar-main">
           <nav className="breadcrumbs" aria-label="Breadcrumb">{desktop?.page ? <span className="current" aria-current="page">{desktop.page.title}</span> : <><Link to={desktop ? "/home" : "/"}>Home</Link>{!!page && <><span aria-hidden="true">/</span>{isVideo ? <><Link to="/my-videos">My videos</Link><span aria-hidden="true">/</span><span ref={setVideoTitleTarget} className="current video-breadcrumb" aria-current="page" /></> : <>{isAgents&&<><Link to="/agents/demo">Agents</Link><span aria-hidden="true">/</span></>}<span className="current" aria-current="page">{isNote ? "Note" : isMyNotes ? "My notes" : isSearch ? "Search" : isAgents ? agentNames[agent] : scope === "mine" ? "My videos" : team?.name || folder?.name || "Workspace"}</span></>}</>}</>}</nav><div ref={setVideoToolbarTarget} className="topbar-actions">{desktop?.page?.actions}</div>
           </div>
           {isVideo && !desktop?.page && <div ref={setVideoPanelTarget} className="panel-toolbar" />}
-        </header>
+        </header>}>
         {notice && <div className="shell-notice"><Notice error>{notice}</Notice></div>}
         <main id="main-content" tabIndex={-1}>
           {!desktop && !page && <MacSetup user={bootstrap.user} serverOrigin={serverOrigin} onUpload={() => setUploadOpen(true)} />}
