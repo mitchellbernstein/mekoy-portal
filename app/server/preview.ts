@@ -29,7 +29,7 @@ async function hostedPreview(runtime: Runtime, key: string, uid: string, format:
       url.searchParams.set("time", "0s"); url.searchParams.set("width", "320"); url.searchParams.set("height", "320"); url.searchParams.set("fit", "clip");
       if (format === "gif") { url.searchParams.set("duration", "4s"); url.searchParams.set("fps", "6"); }
       stage = "download";
-      const response = await fetch(url, { redirect: "error", signal: AbortSignal.timeout(5000) });
+      const response = await fetch(url, { redirect: "manual", signal: AbortSignal.timeout(5000) });
       stage = "validate";
       asset = await readPreviewBody(response, format);
       if (!asset) console.warn("Preview unavailable", { stage: response.ok ? "validate" : "download", format, status: response.status });
