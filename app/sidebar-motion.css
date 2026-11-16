@@ -1,10 +1,9 @@
 .workspace-shell { transition: none; }
 .workspace-shell.sidebar-collapsed { grid-template-columns: 0 minmax(0, 1fr); }
-.workspace-shell > .sidebar { display: flex; top: 8px; width: var(--sidebar); min-width: 0; height: calc(100dvh - 16px); padding: 44px 14px 0; overflow: clip; opacity: 1; transform: none; visibility: visible; transition: none; }
-.sidebar-body { display: flex; flex-direction: column; width: 100%; min-height: 0; flex: 1; opacity: 1; transform: translateX(0); transition: opacity 160ms ease, transform 220ms cubic-bezier(.2, .8, .2, 1); }
+.workspace-shell > .sidebar { display: flex; top: 8px; width: var(--sidebar); min-width: 0; height: calc(100dvh - 16px); padding: 44px 14px 0; overflow: clip; opacity: 1; transform: translateX(0); visibility: visible; transition: opacity 160ms ease, transform 220ms cubic-bezier(.2, .8, .2, 1), visibility 0s; }
+.sidebar-body { display: flex; flex-direction: column; width: 100%; min-height: 0; flex: 1; }
 .sidebar-body > nav { min-height: 0; overflow-y: auto; overscroll-behavior: contain; flex: 1; margin: 0 -7px; padding: 0 7px 20px; }
-.sidebar[inert] { pointer-events: none; }
-.sidebar[inert] .sidebar-body { opacity: 0; transform: translateX(-16px); }
+.workspace-shell > .sidebar[inert] { pointer-events: none; opacity: 0; transform: translateX(-16px); visibility: hidden; transition-delay: 0s, 0s, 220ms; }
 .window-chrome { position: fixed; top: 13px; left: 16px; z-index: 30; display: flex; align-items: center; gap: 3px; height: 28px; -webkit-app-region: no-drag; }
 .window-chrome .icon-button { width: 28px; height: 28px; -webkit-app-region: no-drag; }
 .window-chrome .desktop-history { display: flex; align-items: center; gap: 1px; }
@@ -24,14 +23,13 @@
   .workspace-shell:not(.desktop-shell) > .mobile-menu { position: fixed; top: 7px; left: 13px; z-index: 30; display: inline-flex; }
   .workspace-shell:not(.desktop-shell) > .sidebar { position: fixed; top: 0; left: 0; z-index: 45; width: min(280px, calc(100vw - 48px)); height: 100dvh; padding-top: 56px; visibility: hidden; opacity: 0; transform: translateX(-100%); transition: opacity 140ms ease, transform 220ms cubic-bezier(.2, .8, .2, 1), visibility 0s linear 220ms; }
   .workspace-shell:not(.desktop-shell) > .sidebar.is-open { visibility: visible; opacity: 1; transform: translateX(0); transition-delay: 0s; }
-  .workspace-shell:not(.desktop-shell) .sidebar-body { opacity: 1; transform: none; }
   .workspace-shell:not(.desktop-shell) .topbar-main { padding-left: 34px; }
   .workspace-shell:not(.desktop-shell) .video-topbar .topbar-main { padding-left: 58px; }
   .workspace-shell .nav-scrim { display: block; z-index: 40; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .workspace-shell .sidebar-body, .workspace-shell .sidebar[inert] .sidebar-body, .workspace-shell:not(.desktop-shell) > .sidebar { transform: none; transition-property: opacity; transition-duration: 120ms !important; }
-  .workspace-shell:not(.desktop-shell) > .sidebar { transition-property: opacity, visibility; transition-duration: 120ms, 0s !important; transition-delay: 0s, 120ms; }
+  .workspace-shell > .sidebar, .workspace-shell > .sidebar[inert] { transform: none; transition-property: opacity, visibility; transition-duration: 120ms, 0s !important; transition-delay: 0s; }
+  .workspace-shell > .sidebar[inert] { transition-delay: 0s, 120ms; }
   .workspace-shell:not(.desktop-shell) > .sidebar.is-open { transition-delay: 0s; }
 }

@@ -39,7 +39,7 @@ To operate the optional demo runner, set `APP_ORIGIN` to the reachable portal an
 
 Use two synthetic members and one outsider. Upload a recording, interrupt and retry the upload, verify durable original bytes, signed playback, comments, transcript timing, and shared notes. Revoke membership and verify video, media, search, activity, and provider access on fresh requests. Repeat deployment and confirm persisted data, stable secrets, and existing resources survive. No clean-account provider run has been recorded for this template yet.
 
-The managed installation at [mekoy.com](https://mekoy.com) passed this flow on 2026-11-16 with an 84-second synthetic recording: exact original integrity, signed Stream playback, private JPEG/GIF previews, 172 timed words, cited summary, 3 grounded chapters, collaboration and membership revocation survived deployment. This does not establish large-recording limits, capacity for 200 users, or a complete button deployment in a fresh Cloudflare account.
+The managed portal is [app.mekoy.com](https://app.mekoy.com); its commercial marketing site is separate. The installation passed this flow on 2026-11-16 with an 84-second synthetic recording: exact original integrity, signed Stream playback, private JPEG/GIF previews, 172 timed words, cited summary, 3 grounded chapters, collaboration and membership revocation survived deployment. Initial acceptance used the earlier apex portal address. This does not establish large-recording limits, capacity for 200 users, or a complete button deployment in a fresh Cloudflare account.
 
 ## Provider documentation
 
