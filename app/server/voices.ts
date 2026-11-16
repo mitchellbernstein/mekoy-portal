@@ -30,7 +30,7 @@ async function bytes(input:Request|Response,limit:number) {
 }
 async function provider(runtime:Runtime,path:string,options:RequestInit={}) {
   const key=configured(runtime);
-  try {return await fetch("https://api.elevenlabs.io"+path,{...options,redirect:"error",headers:{...Object.fromEntries(new Headers(options.headers)),"xi-api-key":key},signal:AbortSignal.timeout(120_000)});}
+  try {return await fetch("https://api.elevenlabs.io"+path,{...options,redirect:"manual",headers:{...Object.fromEntries(new Headers(options.headers)),"xi-api-key":key},signal:AbortSignal.timeout(120_000)});}
   catch {throw new HttpError(502,"ElevenLabs did not confirm the operation. Check your voice status before retrying");}
 }
 function providerFailure(status:number) {

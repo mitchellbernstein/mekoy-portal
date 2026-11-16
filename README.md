@@ -20,6 +20,8 @@ For a CLI deployment, copy `.env.example` to `.env` and enter the existing resou
 
 The Cloudflare build disables implicit `.env` and process-secret inference. This prevents Vite from writing the build token into generated preview `.dev.vars` files. An intentionally supplied local `.dev.vars` can still produce private preview output, so it must contain runtime secrets only. Never publish generated build directories or preview secrets.
 
+Visual indexing and Feedback use `@cf/meta/llama-3.2-11b-vision-instruct`. Its account owner must review and accept the [model's license and usage policy](https://developers.cloudflare.com/workers-ai/models/llama-3.2-11b-vision-instruct/) before enabling those operations. The service never accepts terms on your behalf. Recording, playback, Nova-3 transcription, cited summaries and chapters remain usable while vision setup is pending.
+
 Hyperdrive is a connection pool to an external database, so the full product is not Cloudflare-only hosting. Worker transcription streams media directly to the Cloudflare-hosted model. The application's upload limits do not establish the model's supported duration or byte range; large-recording inference has not been provider verified. The Node runtime uses external Deepgram when its optional key is configured. Slack, GitHub, custom narration, and demo recording require their own authorized integrations. Demo recording needs a separately operated Node and Docker service using `scripts/agents/runner.mjs`. Its pinned container provides Playwright. The Worker does not run that container, and the portal package does not install Playwright. No runner or provider capability is implied by an empty token.
 
 To operate the optional demo runner, set `APP_ORIGIN` to the reachable portal and configure the same separate `DEMO_RUNNER_TOKEN` on both services. Run `npm run agent:runner` on the customer Node/Docker host. Keep `DEMO_OUTPUT_ROOT` durable so interrupted runs retain their recovery files. Provider consent and repository membership checks remain required before the runner can claim work.
@@ -36,6 +38,8 @@ To operate the optional demo runner, set `APP_ORIGIN` to the reachable portal an
 ## Verify a deployment
 
 Use two synthetic members and one outsider. Upload a recording, interrupt and retry the upload, verify durable original bytes, signed playback, comments, transcript timing, and shared notes. Revoke membership and verify video, media, search, activity, and provider access on fresh requests. Repeat deployment and confirm persisted data, stable secrets, and existing resources survive. No clean-account provider run has been recorded for this template yet.
+
+The managed installation at [mekoy.com](https://mekoy.com) passed this flow on 2026-11-16 with an 84-second synthetic recording: exact original integrity, signed Stream playback, private JPEG/GIF previews, 172 timed words, cited summary, 3 grounded chapters, collaboration and membership revocation survived deployment. This does not establish large-recording limits, capacity for 200 users, or a complete button deployment in a fresh Cloudflare account.
 
 ## Provider documentation
 

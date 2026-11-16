@@ -40,8 +40,8 @@ function requireRunner(request:Request,runtime:Runtime) {
 }
 async function github(runtime:Runtime,connection:Pick<Connection,"access_token">,path:string,method="GET",data?:unknown) {
   const token=await encrypt(runtime,connection.access_token,true);
-  const response=await fetch(`https://api.github.com${path}`,{method,redirect:"error",headers:{Authorization:`Bearer ${token}`,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2026-03-10","User-Agent":"video-workspace",...(data===undefined?{}:{"Content-Type":"application/json"})},...(data===undefined?{}:{body:JSON.stringify(data)}),signal:AbortSignal.timeout(30_000)});
-  if (!response.ok) throw new ProviderError(`GitHub returned ${response.status}. Verify repository access and reconnect with Contents read, Pull requests read, and Webhooks write permissions`,false,Number(response.headers.get("retry-after"))||0,[401,403,404,422].includes(response.status));
+  const response=await fetch(`https://api.github.com${path}`,{method,redirect:"manual",headers:{Authorization:`Bearer ${token}`,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2026-03-10","User-Agent":"video-workspace",...(data===undefined?{}:{"Content-Type":"application/json"})},...(data===undefined?{}:{body:JSON.stringify(data)}),signal:AbortSignal.timeout(30_000)});
+  if (!response.ok) { await response.body?.cancel(); throw new ProviderError(`GitHub returned ${response.status}. Verify repository access and reconnect with Contents read, Pull requests read, and Webhooks write permissions`,false,Number(response.headers.get("retry-after"))||0,[401,403,404,422].includes(response.status)); }
   if (response.status===204) return null;
   const raw=await response.text();
   if (raw.length>4_000_000) throw new ProviderError("GitHub response exceeded the supported source evidence size",false,0,true);
@@ -292,8 +292,8 @@ export async function agentPublic(request:Request,runtime:Runtime):Promise<Respo
     const response=await fetch(`https://api.github.com/repos/${connection.full_name}/tarball/${item.commitSha}`,{redirect:"manual",headers:{Authorization:`Bearer ${token}`,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2026-03-10","User-Agent":"video-workspace"},signal:AbortSignal.timeout(30_000)});
     const location=response.headers.get("location");
     if (response.status!==302 || !location || new URL(location).protocol!=="https:" || new URL(location).hostname!=="codeload.github.com") throw new HttpError(502,"GitHub did not return an approved exact-commit source archive");
-    const archive=await fetch(location,{redirect:"error",signal:AbortSignal.timeout(120_000)});
-    if (!archive.ok || !archive.body) throw new HttpError(502,"GitHub source archive is unavailable");
+    const archive=await fetch(location,{redirect:"manual",signal:AbortSignal.timeout(120_000)});
+    if (!archive.ok || !archive.body) { await archive.body?.cancel(); throw new HttpError(502,"GitHub source archive is unavailable"); }
     let bytes=0;
     const bounded=new TransformStream<Uint8Array,Uint8Array>({transform(chunk,controller){bytes+=chunk.byteLength;if(bytes>128*1024*1024) throw new Error("Repository archive exceeds 128 MiB");controller.enqueue(chunk);}});
     return new Response(archive.body.pipeThrough(bounded),{headers:{"Content-Type":"application/gzip","Cache-Control":"no-store","X-Source-Commit":item.commitSha}});
