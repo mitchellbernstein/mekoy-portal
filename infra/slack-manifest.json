@@ -1,0 +1,12 @@
+{
+  "display_information": {"name":"Video workspace","description":"Share recordings and synchronize timed team discussion","background_color":"#3b5ddd"},
+  "features": {"bot_user":{"display_name":"Video workspace","always_online":false}},
+  "oauth_config": {
+    "redirect_urls":["https://YOUR_APP_ORIGIN/api/slack/callback"],
+    "scopes":{"bot":["chat:write","channels:read","groups:read","channels:history","groups:history","reactions:read","users:read","users:read.email","metadata.message:read"]}
+  },
+  "settings": {
+    "event_subscriptions":{"request_url":"https://YOUR_APP_ORIGIN/api/slack/events","bot_events":["message.channels","message.groups","reaction_added","reaction_removed","app_uninstalled","tokens_revoked"]},
+    "org_deploy_enabled":false,"socket_mode_enabled":false,"token_rotation_enabled":false
+  }
+}

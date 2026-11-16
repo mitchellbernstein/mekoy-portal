@@ -1,0 +1,29 @@
+.mac-setup { margin: 30px 30px 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); overflow: hidden; }
+.mac-setup-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding: 28px 30px; border-bottom: 1px solid var(--line); }
+.mac-setup-eyebrow { font-size: 9px; letter-spacing: 1.3px; color: var(--purple); font-weight: 600; }
+.mac-setup-heading h2 { margin: 8px 0; font-size: clamp(23px, 2.5vw, 32px); line-height: 1.2; font-weight: 550; letter-spacing: -1px; overflow-wrap: anywhere; }
+.mac-setup-heading > div > p:last-child { font-size: 13px; color: var(--text-muted); }
+.mac-availability { display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0; margin-top: 4px; font-size: 10px; color: var(--purple); background: var(--purple-bg); padding: 6px 10px; border: 1px solid var(--purple-line); border-radius: 20px; }
+.mac-availability > span { width: 5px; height: 5px; border-radius: 50%; background: var(--purple); }
+.mac-setup-body { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); }
+.mac-setup-intro { padding: 30px; border-right: 1px solid var(--line); }
+.mac-app-icon { display: grid; width: 58px; height: 58px; place-items: center; margin-bottom: 20px; background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple-line); border-radius: 15px; box-shadow: 0 3px 0 var(--shadow) inset, 0 3px 5px var(--shadow); }
+.mac-setup-intro h3 { font-size: 19px; font-weight: 550; letter-spacing: -.5px; margin-bottom: 9px; }
+.mac-setup-intro > p { color: var(--text-muted); font-size: 12px; max-width: 350px; line-height: 1.7; }
+.mac-server { margin-top: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 7px; padding: 16px; }
+.mac-server > span { display: block; font-size: 10px; color: var(--text-muted); margin-bottom: 6px; }
+.mac-server code { display: block; font-size: 12px; color: var(--text-secondary); overflow-wrap: anywhere; user-select: all; line-height: 1.7; }
+.mac-server .button { margin-top: 12px; font-size: 11px; min-height: 32px; background: var(--surface-muted); }
+.mac-server p { margin-top: 9px; color: var(--text-muted); font-size: 10px; line-height: 1.5; }
+.mac-setup-steps { padding: 8px 30px; margin: 0; list-style: none; }
+.mac-setup-steps li { display: flex; align-items: flex-start; gap: 15px; padding: 19px 0; border-bottom: 1px solid var(--line); }
+.mac-setup-steps li:last-child { border: 0; }
+.mac-setup-steps li > span { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 10px; color: var(--purple); padding-top: 3px; }
+.mac-setup-steps h3 { font-size: 12px; font-weight: 600; margin-bottom: 5px; }
+.mac-setup-steps p { font-size: 11px; line-height: 1.7; color: var(--text-muted); }
+.mac-setup-steps a { text-decoration: underline; text-underline-offset: 2px; color: var(--purple); }
+.mac-setup-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 30px; border-top: 1px solid var(--line); background: var(--surface-muted); }
+.mac-setup-footer p { font-size: 11px; color: var(--text-muted); }
+.mac-setup-footer .button { font-size: 11px; min-height: 34px; background: var(--surface); }
+@media (max-width: 1050px) { .mac-setup-heading { flex-direction: column; gap: 12px; } }
+@media (max-width: 700px) { .mac-setup { margin: 18px 16px 0; }.mac-setup-heading { padding: 23px 20px; }.mac-setup-body { grid-template-columns: minmax(0, 1fr); }.mac-setup-intro { border-right: 0; border-bottom: 1px solid var(--line); padding: 23px 20px; }.mac-app-icon { float: right; margin: 0 0 12px 12px; width: 47px; height: 47px; }.mac-setup-steps { padding: 3px 20px; }.mac-setup-footer { padding: 16px 20px; flex-wrap: wrap; } }

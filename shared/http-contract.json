@@ -1,0 +1,58 @@
+{
+  "version": 4,
+  "momentLinks": "/videos/:id?t=<integer milliseconds>; preserve t=0",
+  "auth": {
+    "signUp": "POST /api/auth/sign-up/email {name,email,password}",
+    "signIn": "POST /api/auth/sign-in/email {email,password}",
+    "nativeTokenHeader": "set-auth-token",
+    "requests": "Authorization: Bearer <token> or browser cookie",
+    "signOut": "POST /api/auth/sign-out {}"
+  },
+  "native": {
+    "account": "GET /api/me -> {user:{id,name,email}}",
+    "activity": "GET /api/activity -> {activity:Activity[]}",
+    "prepare": "POST /api/uploads UploadInput -> UploadPreparation",
+    "sendBytes": "PUT upload.url with upload.headers + Authorization for same-origin only; Content-Length must equal byteLength. Stream file. Repeat may replace incomplete bytes.",
+    "finish": "POST completeUrl {} -> UploadReceipt",
+    "open": "/videos/:id",
+    "recovery": "Persist recording UUID, local file, metadata before prepare. Retry same UUID. Delete nothing before durable receipt. Same UUID and metadata converge to one video."
+  },
+  "mcp": {
+    "endpoint": "POST /api/mcp with signed Authorization bearer only. Cookie authentication is disabled. Exact configured Host and any supplied Origin must match. Finite JSON supports modern and legacy Streamable HTTP; no subscriptions or batches.",
+    "tools": "search({query}) -> {results:[{id,title,url,metadata}]}; fetch({id}) -> {id,title,text,url,metadata}; list_videos({limit?,teamId?,folderId?,cursor?}) -> {videos,nextCursor}.",
+    "retrieval": "Fetch IDs identify bounded page documents. text is JSON {untrusted:true,sources:[...]}, preserving canonical word timing, current comment bodies, reply parents, summary state, and sampled visual descriptions. Follow metadata.nextId until null. Continuations grant no rights.",
+    "limits": "Request and final response at most 128 KiB. At most 20 lexical matches, 600-character labeled previews, 100 source items per fetch page, and 50 videos per list page. A single oversized source returns an explicit tool error instead of truncated text."
+  },
+  "web": {
+    "bootstrap": "GET /api/bootstrap -> Bootstrap",
+    "accountPlan": "Bootstrap.account is {plan:free|workspace,canOrganize:boolean}. PostgreSQL owns the plan. DEFAULT_ACCOUNT_PLAN explicitly selects new-account behavior and defaults to workspace. Existing accounts and private recordings remain unchanged. Clients cannot set workspacePlan through signup or account update. Free accounts cannot create or assign teams/folders or start new organization/provider operations.",
+    "viewingLink": "GET /api/videos/:id/share-link -> {link:ShareLink|null}, owner only, independent of plan, never creates a link. POST the same path {} retrieves an existing link without renewal or issues the first one. Issue and POST /api/videos/:id/share-link/replace {} require a free owner of an uploaded personal recording. DELETE /api/videos/:id/share-link {} revokes an existing link under either plan. Team membership rules stay unchanged. First issue lasts exactly 168 hours. A move into a team revokes the link. No original or receipt is deleted.",
+    "publicView": "GET /s/:token renders a view-only page. GET /api/shared/:token -> {video:{title,durationMs,mimeType,expiresAt,mediaUrl,playbackUrl,chapters}}. GET playbackUrl -> {mediaUrl,streamUrl}. GET or HEAD mediaUrl supports inline ranges. Every request requires an active opaque link, uploaded media, personal scope, and a nondeleted video. Missing/expired/revoked links return the same 404. No comments, transcript, account identity, viewers, activity, provider operation details, source URL, download action, or public writes. A Stream JWT exposes its video UID in sub; signed URLs remain required. Public tokens cover recorded duration plus 15 minutes, capped by 24 hours and link expiry. Unknown or near-limit duration uses gated original playback. One encrypted token is cached per link in PostgreSQL and refreshed after at most ten minutes, serialized by row locks. Failed minting backs off one minute. Cache fields clear on replace, revoke, team assignment, or deletion. Public HTTP responses stay no-store. Revocation blocks new application requests; issued Stream tokens and delivered bytes cannot be recalled.",
+    "videos": "GET /api/videos?scope=home|mine|team|folder&id=<id> -> {videos:Video[]}",
+    "chapters": "Video and SharedVideo include chapters: {title,startMs,endMs}[], at most twelve increasing, contiguous sections within recorded duration. A real transcript chunk anchors every generated start and exact supporting quote. Supporting quotes and transcript_hash stay internal. Complete bounded transcript evidence is required; missing, incomplete, oversized, or unsupported evidence yields an unsegmented timeline. Nullable stored chapter results are independent of the editable/deletable summary comment. Empty or rejected results are retryable. Changed transcript snapshots reset chapters; publication compares transcript_hash, duration, and completion to reject stale responses. Feed reads never fetch transcript words for chapters.",
+    "feed": "GET /api/feed?teamId=<optional> -> {posts:FeedPost[],activity:Activity[]}. At most 20 uploaded videos, newest first, with their canonical comments and no transcript words. Activity retains its existing shape.",
+    "teams": "POST /api/teams {name} -> {team:Team}",
+    "members": "GET /api/teams/:id/members -> {members:[{id,name,email,role}]}; POST /api/teams/:id/members {email}; DELETE /api/teams/:id/members/:userId. Original team-owner authorization applies to every method. Only POST/add requires organization entitlement. List and remove remain available after downgrade.",
+    "schedulePause": "POST /api/agents/schedules {teamId,audience,enabled:false} pauses only an existing schedule under current team-owner authorization. It preserves timing and nextRunAt. A missing schedule returns 404. Creating or enabling requires organization entitlement and full timing input.",
+    "folders": "POST /api/folders {name,teamId?} -> {folder:Folder}",
+    "detail": "GET /api/videos/:id -> VideoDetail",
+    "playback": "GET /api/videos/:id/playback -> {mediaUrl,streamUrl}. Authenticated members may request ?original=1 to use the authorized range-capable original without minting a provider playback token. Membership and deletion checks are identical. Desktop uses this path to keep scripts bundled locally.",
+    "metadata": "PATCH /api/videos/:id {title?,teamId?,folderId?}",
+    "delete": "DELETE /api/videos/:id {} -> {deleted:true}. Owner only. Hides video, media and collaboration; preserves original media and durable receipts. Existing private signed playback tokens expire within five minutes. Issued public tokens may remain usable for their duration budget, capped by 24 hours and viewing-link expiry.",
+    "view": "POST /api/videos/:id/views {eventId} -> {recorded:boolean}",
+    "comment": "POST /api/videos/:id/comments {body,positionMs,parentId?} -> {comment:Comment}; body may be text or emoji. Every root needs explicit integer positionMs. A reply may omit positionMs to inherit its parent; null is invalid.",
+    "commentEdit": "PATCH /api/comments/:id {body}; DELETE /api/comments/:id",
+    "search": "GET /api/search?q=<query>&semantic=<optional 1> -> SearchResponse {results:SearchHit[],semanticError:string|null}. Plain requests use PostgreSQL only. Results inherit current membership and require a completed upload.",
+    "searchAnswer": "POST /api/search/answer {query:string, 1..300 trimmed characters} -> SearchAnswer. Explicit submit only. Answered statements contain exact-quote SearchCitation[] with server-owned source, video, timestamp, and videoUrl. Insufficient evidence is an explicit state. Setup/provider errors use the normal error contract. Content and membership are rechecked after inference. Both variants include retrievalWarning:string|null. An atomic PostgreSQL reservation limits attempted answer generations to 20 per user per UTC day by default. SEARCH_ANSWER_DAILY_LIMIT is a trusted operator override. Reserved failures and cancellations count. Missing setup or skipped answer inference does not count. Exhaustion returns 429 with a 00:00 UTC reset action; plaintext search remains available.",
+    "process": "POST /api/videos/:id/process {} -> {status:string}",
+    "slackConnect": "GET /api/slack/connect?teamId=<id> -> OAuth redirect",
+    "slackShare": "POST /api/videos/:id/slack {channelId} -> {status,threadUrl?}",
+    "errors": "All non-2xx API errors are {error:string}. Unauthorized 401. Inaccessible content 404. Invalid input 400. Idempotency conflict 409. Missing provider 503.",
+    "discussion": "VideoDetail has comments, words, processing, feedback, slack, viewers, and shareLink. Only the owner receives an existing ShareLink; other viewers receive null. Viewers are {items:[{id,name,image:string|null}],total:number}, at most five distinct authenticated viewers ordered by recorded view recency. Existing day-only records retain day precision. No separate reactions or summary. Every Comment has numeric positionMs and source web|slack|agent|summary. The uploader opening summary is source=summary at0, ordered first, with optional summaryMoments citations. Ordinary edits/deletes protect it from automatic replacement.",
+    "meetingNotes": "GET /api/meeting-notes?scope=feed|mine|team|folder&id=<scope id>&q=<raw source query>&limit=1..100&cursor=<opaque> -> {notes:SharedMeetingNoteListItem[],nextCursor:string|null}. Membership is checked on every read. Lists expose bounded source previews, not full documents. scope=mine&clientMeetingId=<UUID> identifies the current copy or its removedVersion tombstone.",
+    "meetingNoteDetail": "GET /api/meeting-notes/:id -> {note:SharedMeetingNote}. Owner or current team member only; personal copies are owner-only. Summary is labeled derived; raw notes and actual timed transcript segments remain separate. No audio is published.",
+    "meetingNotePublish": "POST /api/meeting-notes SharedMeetingNoteInput -> {note:SharedMeetingNote}; maximum 900000 UTF-8 bytes, no silent truncation. Explicit owner snapshot with stable clientMeetingId, immutable sourceCreatedAt, sourceRevision and expectedVersion CAS. Exact retries converge. Removed copies require current tombstone version and explicit restore. Desktop generic request/protocol POST is blocked; main builds the snapshot from acknowledged local state.",
+    "meetingNoteMove": "PATCH /api/meeting-notes/:id {teamId:string|null,folderId:string|null,expectedVersion:number} -> {note:SharedMeetingNote}. Owner only. Destination folder and note must have matching personal/team visibility. Current membership and version required; stale changes return409. Teams and folders list both video and note collections.",
+    "meetingNoteDelete": "DELETE /api/meeting-notes/:id -> {deleted:true}. Owner only; scrubs published content and search data, retains a version tombstone. Local Mac originals and audio are untouched. No public note links or automatic sync."
+  }
+}

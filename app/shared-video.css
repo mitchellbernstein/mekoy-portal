@@ -1,0 +1,4 @@
+.shared-video-page { width: min(1120px, 100%); margin: 0 auto; padding: clamp(20px, 4vw, 48px); }
+.shared-video-page header { margin-bottom: 24px; }
+.shared-video-page h1 { overflow-wrap: anywhere; margin: 8px 0; }
+.shared-video-page .notice { margin-top: 16px; }

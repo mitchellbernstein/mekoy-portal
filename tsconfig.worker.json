@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["workers/**/*.ts", "app/server/**/*.ts", "shared/**/*.ts", "app/env.d.ts"],
+  "exclude": [],
+  "compilerOptions": { "lib": ["ES2023"], "types": ["node", "@cloudflare/workers-types", "vite/client"] }
+}

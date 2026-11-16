@@ -1,0 +1,8 @@
+.popover { position: fixed; inset: auto; margin: 0; max-width: calc(100vw - 16px); max-height: calc(100dvh - 16px); color: var(--text); -webkit-app-region: no-drag; }
+.popover::backdrop { background: transparent; pointer-events: none; }
+.popover[data-state="closing"] { pointer-events: none; }
+.modal::backdrop { transition: opacity 140ms ease; }
+.modal[data-state="closing"]::backdrop { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .popover, .modal { transform: none !important; }
+}

@@ -1,0 +1,64 @@
+{
+  "name": "mekoy-portal",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "cloudflare": {
+    "bindings": {
+      "HYPERDRIVE": { "description": "Select an existing Hyperdrive connection to your PostgreSQL 17 database with pgvector. Query caching must already be disabled. See the README setup steps." },
+      "ORIGINALS": { "description": "Private originals bucket. Configure exact-origin PUT CORS, and set R2_BUCKET_NAME to this same bucket name." },
+      "JOBS": { "description": "Queue for durable media and inference jobs." },
+      "AI": { "description": "Workers AI runs Cloudflare-hosted Nova-3 transcription. Provider allowance and actual media limits still apply." },
+      "APP_ORIGIN": { "description": "Public HTTPS origin for this Worker, such as your chosen workers.dev hostname. No path, query or fragment." },
+      "CLOUDFLARE_ACCOUNT_ID": { "description": "Your Cloudflare account ID, containing the selected Hyperdrive, originals bucket, Stream and Worker." },
+      "R2_BUCKET_NAME": { "description": "Enter exactly the bucket name selected for ORIGINALS." },
+      "BETTER_AUTH_SECRET": { "description": "Generate once with openssl rand -base64 48. Keep stable across deployments." },
+      "R2_ACCESS_KEY_ID": { "description": "Access Key ID from an R2 Object Read and Write token scoped to the originals bucket." },
+      "R2_SECRET_ACCESS_KEY": { "description": "Secret Access Key for that same scoped R2 token." },
+      "CLOUDFLARE_API_TOKEN": { "description": "Narrow runtime token for Stream Edit and Workers AI Read and Edit. Do not paste the operator or build deployment token here." }
+    }
+  },
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env --import tsx server/node.ts",
+    "start": "NODE_ENV=production node --env-file-if-exists=.env --import tsx server/node.ts",
+    "build": "CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false CLOUDFLARE_BUILD=1 react-router build",
+    "build:cloudflare": "npm run build",
+    "build:node": "react-router build",
+    "typecheck": "react-router typegen && tsc --noEmit && tsc -p tsconfig.worker.json --noEmit",
+    "deploy": "node --env-file-if-exists=.env scripts/check-cloudflare-deploy.mjs && wrangler deploy",
+    "configure:cloudflare": "node --env-file-if-exists=.env --import tsx scripts/configure-cloudflare.ts",
+    "db:migrate": "node --env-file-if-exists=.env --import tsx scripts/migrate.ts",
+    "jobs": "node --env-file-if-exists=.env --import tsx scripts/jobs.ts",
+    "agent:runner": "node --env-file-if-exists=.env scripts/agents/runner.mjs",
+    "agent:schedules": "node --env-file-if-exists=.env --import tsx scripts/agent-schedules.ts",
+    "slack:manifest": "node --env-file-if-exists=.env --import tsx scripts/slack-manifest.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.4.0",
+    "@react-router/node": "8.5.1",
+    "@tiptap/pm": "3.34.0",
+    "@tiptap/react": "3.34.0",
+    "@tiptap/starter-kit": "3.34.0",
+    "aws4fetch": "1.0.20",
+    "better-auth": "1.7.25",
+    "motion": "14.14.0",
+    "pg": "8.23.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router": "8.5.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.69.1",
+    "@cloudflare/workers-types": "5.20261114.1",
+    "@react-router/dev": "8.5.1",
+    "@types/node": "26.6.6",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vite": "8.3.8",
+    "wrangler": "4.162.0"
+  }
+}

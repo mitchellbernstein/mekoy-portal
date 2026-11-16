@@ -1,0 +1,13 @@
+.comment-input { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); overflow: hidden; }
+.comment-input:focus-within { border-color: var(--blue); box-shadow: 0 0 0 2px var(--focus-halo); }
+:is(.comment-composer, .reply-form) .comment-input textarea { display: block; border: 0; border-radius: 0; box-shadow: none; background: transparent; resize: vertical; }
+.comment-input .composer-actions { flex-wrap: nowrap; gap: 8px; margin: 0; padding: 4px 10px 10px; }
+.comment-input :is(.composer-context, .composer-submit) { min-width: 0; gap: 8px; }
+.comment-input .composer-time { background: transparent; padding: 3px 0; }
+.comment-input .composer-send { width: 38px; min-width: 38px; height: 36px; min-height: 36px; padding: 0; flex-shrink: 0; }
+.comment-input .composer-send .spinner { border-color: var(--surface); border-top-color: var(--surface); }
+.comment-input .emoji-picker { margin: 0 10px 6px; }
+@media (max-width: 760px) {
+  .comment-input .composer-send { width: 44px; min-width: 44px; height: 44px; min-height: 44px; }
+  .comment-input .composer-submit .text-button { min-height: 44px; }
+}

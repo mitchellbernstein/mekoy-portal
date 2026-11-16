@@ -1,0 +1,14 @@
+node_modules
+.git
+.audit
+.codex
+.env*
+**/.dev.vars*
+.wrangler
+.local
+build
+build-cloudflare
+artifacts
+dist
+native/.build
+native/dist

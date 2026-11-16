@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mekoy-portal",
+  "main": "workers/app.ts",
+  "compatibility_date": "2026-11-14",
+  "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
+  "assets": { "directory": "build-cloudflare/client", "binding": "ASSETS" },
+  "observability": { "enabled": true },
+  "ai": { "binding": "AI" },
+  "triggers": { "crons": ["* * * * *"] },
+  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "00000000000000000000000000000000" }],
+  "r2_buckets": [{ "binding": "ORIGINALS", "bucket_name": "mekoy-portal-originals" }],
+  "queues": {
+    "producers": [{ "binding": "JOBS", "queue": "mekoy-portal-jobs" }],
+    "consumers": [{ "queue": "mekoy-portal-jobs", "max_batch_size": 1, "max_concurrency": 1, "max_retries": 3 }]
+  },
+  "secrets": { "required": ["BETTER_AUTH_SECRET", "CLOUDFLARE_API_TOKEN", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY"] },
+  "vars": {
+    "APP_ORIGIN": "",
+    "CLOUDFLARE_ACCOUNT_ID": "",
+    "DEFAULT_ACCOUNT_PLAN": "workspace",
+    "R2_BUCKET_NAME": "mekoy-portal-originals"
+  }
+}

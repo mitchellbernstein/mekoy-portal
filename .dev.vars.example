@@ -1,0 +1,9 @@
+# Local Worker secret example. These blanks are never working credentials.
+# Public variables are declared in wrangler.jsonc. Button fields use its declarations and package binding descriptions.
+# Generate once with openssl rand -base64 48. Preserve this across deploys.
+BETTER_AUTH_SECRET=
+# Requires only the Stream and Workers AI operations used by the app.
+CLOUDFLARE_API_TOKEN=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+# Worker transcription uses the AI binding. No external Deepgram key is needed.
