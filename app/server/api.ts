@@ -4,7 +4,7 @@ import type { Runtime } from "./runtime";
 import { accessibleVideo, activityJson, commentJson, createComment, member, playbackJson, recordEvent, validateScope, videoJson, visible } from "./domain";
 import { slackCallback, slackConnect, slackEvents, shareSlack, ProviderError } from "./slack";
 import { answerWorkspace, searchWorkspace } from "./search";
-import { body, json } from "./http";
+import { body, json, readBody } from "./http";
 import { prepareUpload, putUpload, completeUpload } from "./uploads";
 import { agentApi, agentPublic } from "./agents";
 import { handleMcp } from "./mcp";
@@ -14,6 +14,7 @@ import { publicShare, readShareLink, revokeShareLink, revokeVideoLink, shareLink
 import { meetingNotesApi } from "./meeting-notes";
 import { servePreview } from "./preview";
 import { transcriptionProvider, transcriptionSetup } from "./transcription";
+import { teamMembershipApi } from "./team-membership";
 
 const id=z.string().min(1).max(100);
 const position=z.number().int().min(0).max(86_400_000).optional();
@@ -24,7 +25,10 @@ export async function handleApi(request:Request,runtime:Runtime):Promise<Respons
     const url=new URL(request.url);const path=url.pathname;const method=request.method;
     if(path==="/api/mcp") return await handleMcp(request,runtime);
     if(path==="/api/health") {await runtime.db.query("SELECT 1");return json({status:"ok",storage:runtime.storage.kind});}
-    if(path.startsWith("/api/auth/")) return runtime.auth.handler(request);
+    if(path.startsWith("/api/auth/")) {
+      const bounded=request.body?new Request(request,{body:await readBody(request)}):request;
+      return await runtime.auth.handler(bounded);
+    }
     if(path==="/api/slack/events"&&method==="POST") return await slackEvents(request,runtime);
     const publicAgentResponse=await agentPublic(request,runtime);if(publicAgentResponse) return publicAgentResponse;
     const sharedResponse=await publicShare(request,runtime);if(sharedResponse) return sharedResponse;
@@ -35,6 +39,7 @@ export async function handleApi(request:Request,runtime:Runtime):Promise<Respons
     }
     const agentResponse=await agentApi(request,runtime,user);if(agentResponse) return agentResponse;
     const meetingNoteResponse=await meetingNotesApi(request,runtime,user);if(meetingNoteResponse)return meetingNoteResponse;
+    const membershipResponse=await teamMembershipApi(request,runtime,user);if(membershipResponse)return membershipResponse;
     if(path==="/api/me"&&method==="GET") return json({user});
     if(path==="/api/bootstrap"&&method==="GET") return json(await loadBootstrap(runtime,user));
     if((path==="/api/activity"||path==="/api/feed")&&method==="GET") {
@@ -60,23 +65,6 @@ export async function handleApi(request:Request,runtime:Runtime):Promise<Respons
       const team=await transaction(runtime.db,async db=>{const teamId=uuid();await db.query("INSERT INTO teams(id,name,owner_id) VALUES($1,$2,$3)",[teamId,input.name,user.id]);await db.query("INSERT INTO memberships(team_id,user_id,role) VALUES($1,$2,'owner')",[teamId,user.id]);return {id:teamId,name:input.name,role:"owner"};});
       return json({team});
     }
-    let match=/^\/api\/teams\/([^/]+)\/members(?:\/([^/]+))?$/.exec(path);
-    if(match) {
-      await member(runtime.db,match[1],user.id,true);
-      if(method==="GET"&&!match[2]) {const rows=await runtime.db.query('SELECT u.id,u.name,u.email,m.role FROM memberships m JOIN "user" u ON u.id=m.user_id WHERE m.team_id=$1 ORDER BY u.name',[match[1]]);return json({members:rows.rows});}
-      if(method==="POST"&&!match[2]) {
-        await requireOrganization(runtime.db,user.id,match[1]);
-        const input=await body(request,z.object({email:z.email()}).strict());
-        const found=await runtime.db.query('SELECT id FROM "user" WHERE lower(email)=lower($1)',[input.email]);
-        if(!found.rows[0]) throw new HttpError(404,"That person needs to create an account first");
-        await requireOrganization(runtime.db,found.rows[0].id);
-        await runtime.db.query("INSERT INTO memberships(team_id,user_id,role) VALUES($1,$2,'member') ON CONFLICT DO NOTHING",[match[1],found.rows[0].id]);return json({added:true});
-      }
-      if(method==="DELETE"&&match[2]) {
-        const removed=await runtime.db.query("DELETE FROM memberships WHERE team_id=$1 AND user_id=$2 AND role<>'owner' RETURNING user_id",[match[1],match[2]]);
-        if(!removed.rowCount) throw new HttpError(400,"Team owner cannot be removed");return json({removed:true});
-      }
-    }
     if(path==="/api/folders"&&method==="POST") {
       const input=await body(request,z.object({name:z.string().trim().min(1).max(120),teamId:id.nullable().optional()}).strict());
       if(input.teamId) await member(runtime.db,input.teamId,user.id);
@@ -94,7 +82,7 @@ export async function handleApi(request:Request,runtime:Runtime):Promise<Respons
       return json({videos:rows.rows.map(row=>videoJson(row,runtime))});
     }
     if(path==="/api/uploads"&&method==="POST") return json(await prepareUpload(runtime,user,await body(request,uploadSchema),request));
-    match=/^\/api\/uploads\/([^/]+)\/(bytes|complete)$/.exec(path);
+    let match=/^\/api\/uploads\/([^/]+)\/(bytes|complete)$/.exec(path);
     if(match) {
       if(match[2]==="bytes"&&method==="PUT") return json(await putUpload(runtime,user,match[1],request));
       if(match[2]==="complete"&&method==="POST") {await body(request,z.object({}).strict());return json(await completeUpload(runtime,user,match[1]));}

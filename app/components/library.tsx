@@ -158,6 +158,7 @@ export function VideoPost({ post, bootstrap, reload }: { post: FeedPost; bootstr
 }
 
 type Member = { id: string; name: string; email: string; role: "owner" | "member" };
+type Invitation = { email: string; url: string; expiresAt: string };
 
 function MembersDialog({ team, currentUserId, canAdd, onClose }: { team: Team; currentUserId: string; canAdd:boolean; onClose: () => void }) {
   const { data, error: loadError, loading, reload } = useApi<{ members: Member[] }>(`/api/teams/${encodeURIComponent(team.id)}/members`);
@@ -165,9 +166,10 @@ function MembersDialog({ team, currentUserId, canAdd, onClose }: { team: Team; c
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [invitation, setInvitation] = useState<Invitation | null>(null);
   async function add(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError(""); setNotice("");
-    try { await write(`/api/teams/${encodeURIComponent(team.id)}/members`, "POST", { email: email.trim() }); setEmail(""); setNotice("Member added. They can now view this team’s videos and notes."); reload(); }
+    try { const result = await write<{ invitation: Invitation }>(`/api/teams/${encodeURIComponent(team.id)}/invitations`, "POST", { email: email.trim() }); setInvitation(result.invitation); setEmail(""); }
     catch (failure) { setError(errorMessage(failure)); }
     finally { setBusy(false); }
   }
@@ -178,5 +180,12 @@ function MembersDialog({ team, currentUserId, canAdd, onClose }: { team: Team; c
     catch (failure) { setError(errorMessage(failure)); }
     finally { setBusy(false); }
   }
-  return <Modal title={`${team.name} members`} onClose={onClose} busy={busy}><p className="form-intro">{canAdd?"Add someone who already has a workspace account.":"Remove members here. Adding members requires a workspace account."}</p>{canAdd&&<form onSubmit={add} className="member-form"><label className="sr-only" htmlFor="member-email">Member email</label><input id="member-email" type="email" required placeholder="teammate@company.com" value={email} onChange={event => setEmail(event.target.value)} disabled={busy} /><button className="button primary" disabled={busy || !email.trim()}>Add member</button></form>}{(error || loadError) && <Notice error>{error || loadError}</Notice>}{notice && <Notice>{notice}</Notice>}{loading && !data && <p className="subtle">Loading members…</p>}<div className="member-list">{data?.members.map(member => <div className="member-row" key={member.id}><Avatar name={member.name} /><div><strong>{member.name}{member.id === currentUserId ? " (you)" : ""}</strong><span>{member.email}</span></div>{member.role === "owner" ? <span className="status-pill">Owner</span> : <button className="text-button danger" disabled={busy} onClick={() => remove(member)}>Remove</button>}</div>)}</div></Modal>;
+  async function revoke() {
+    if (!invitation) return;
+    setBusy(true); setError(""); setNotice("");
+    try { await write(`/api/teams/${encodeURIComponent(team.id)}/invitations`, "DELETE", { token: new URL(invitation.url).hash.slice(1) }); setInvitation(null); setNotice("Invitation revoked. The link can no longer grant access."); }
+    catch (failure) { setError(errorMessage(failure)); }
+    finally { setBusy(false); }
+  }
+  return <Modal title={`${team.name} members`} onClose={onClose} busy={busy}><p className="form-intro">{canAdd?"Invite someone who already has a workspace account. Share the link directly with the intended person through a trusted channel. No email is sent.":"Remove members here. Creating invitations requires a workspace account."}</p>{canAdd&&<form onSubmit={add} className="member-form"><label className="sr-only" htmlFor="member-email">Member email</label><input id="member-email" type="email" required placeholder="teammate@company.com" value={email} onChange={event => setEmail(event.target.value)} disabled={busy} /><button className="button primary" disabled={busy || !email.trim()}>Create invite link</button></form>}{(error || loadError) && <Notice error>{error || loadError}</Notice>}{notice && <Notice>{notice}</Notice>}{invitation && <section className="stack-form" aria-label="Pending invitation"><Notice>Invitation pending for {invitation.email}. Access starts only after that account accepts this link. Expires {new Date(invitation.expiresAt).toLocaleString()}.</Notice><label>Invitation link<input readOnly value={invitation.url} onFocus={event => event.target.select()} /></label><button type="button" className="text-button danger" disabled={busy} onClick={revoke}>Revoke invitation</button></section>}{loading && !data && <p className="subtle">Loading members…</p>}<div className="member-list">{data?.members.map(member => <div className="member-row" key={member.id}><Avatar name={member.name} /><div><strong>{member.name}{member.id === currentUserId ? " (you)" : ""}</strong><span>{member.email}</span></div>{member.role === "owner" ? <span className="status-pill">Owner</span> : <button className="text-button danger" disabled={busy} onClick={() => remove(member)}>Remove</button>}</div>)}</div></Modal>;
 }

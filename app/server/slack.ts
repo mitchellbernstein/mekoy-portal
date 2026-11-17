@@ -4,6 +4,7 @@ import { accessibleVideo, createComment, member, recordEvent } from "./domain";
 import { enqueue, HttpError, origin, transaction, uuid } from "./runtime";
 import type { Runtime } from "./runtime";
 import { requireOrganization } from "./entitlements";
+import { readBody } from "./http";
 
 const scopes="chat:write,channels:read,groups:read,channels:history,groups:history,reactions:read,users:read,users:read.email,metadata.message:read";
 type Installation={id:string;team_id:string;slack_team_id:string;bot_user_id:string;access_token:string;status:string};
@@ -51,7 +52,7 @@ export async function slackConnect(request:Request,runtime:Runtime,user:User) {
 export async function slackCallback(request:Request,runtime:Runtime,user:User) {
   configured(runtime);const url=new URL(request.url);const state=url.searchParams.get("state");const code=url.searchParams.get("code");
   if(!state||!code) throw new HttpError(400,"Slack did not return a consent code. Try connecting again");
-  const consumed=await runtime.db.query("DELETE FROM oauth_states WHERE token_hash=$1 AND user_id=$2 AND expires_at>now() RETURNING *",[createHash("sha256").update(state).digest("hex"),user.id]);
+  const consumed=await runtime.db.query("DELETE FROM oauth_states WHERE token_hash=$1 AND user_id=$2 AND expires_at>now() AND purpose IN ('install','link') RETURNING *",[createHash("sha256").update(state).digest("hex"),user.id]);
   const pending=consumed.rows[0];if(!pending) throw new HttpError(400,"Slack connection expired or belongs to another account. Connect again");
   await member(runtime.db,pending.team_id,user.id,pending.purpose==="install");
   await requireOrganization(runtime.db,user.id,pending.team_id);
@@ -94,10 +95,10 @@ export async function shareSlack(runtime:Runtime,user:User,video:any,channelId:s
 export async function slackEvents(request:Request,runtime:Runtime) {
   const secret=runtime.env.SLACK_SIGNING_SECRET;const stamp=request.headers.get("x-slack-request-timestamp")||"";const signature=request.headers.get("x-slack-signature")||"";
   if(!secret||!/^\d+$/.test(stamp)||Math.abs(Date.now()/1000-Number(stamp))>300) throw new HttpError(401,"Invalid or expired Slack signature");
-  if(Number(request.headers.get("content-length"))>1_000_000) throw new HttpError(413,"Slack event too large");
-  const raw=await request.text();if(raw.length>1_000_000) throw new HttpError(413,"Slack event too large");
-  const expected=`v0=${createHmac("sha256",secret).update(`v0:${stamp}:${raw}`).digest("hex")}`;
+  const bytes=await readBody(request,1_000_000);
+  const expected=`v0=${createHmac("sha256",secret).update(`v0:${stamp}:`).update(bytes).digest("hex")}`;
   if(signature.length!==expected.length||!timingSafeEqual(Buffer.from(signature),Buffer.from(expected))) throw new HttpError(401,"Invalid Slack signature");
+  const raw=new TextDecoder().decode(bytes);
   let payload:any;try {payload=JSON.parse(raw);} catch {throw new HttpError(400,"Invalid Slack event JSON");}
   if(payload.type==="url_verification") return Response.json({challenge:payload.challenge});
   if(payload.type!=="event_callback"||typeof payload.event_id!=="string"||typeof payload.team_id!=="string") return Response.json({accepted:false});

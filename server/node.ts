@@ -2,6 +2,7 @@ import http from "node:http";
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { Readable } from "node:stream";
+import { TransformStream } from "node:stream/web";
 import { pipeline } from "node:stream/promises";
 import path from "node:path";
 import { createRequestHandler, RouterContextProvider } from "react-router";
@@ -44,13 +45,15 @@ async function serve(req:http.IncomingMessage,res:http.ServerResponse) {
   res.once("close",()=>{if(!res.writableEnded) controller.abort();});
   const headers=new Headers();for(const [name,value] of Object.entries(req.headers)) {if(Array.isArray(value)) for(const item of value) headers.append(name,item);else if(value) headers.set(name,value);}
   const hasBody=req.method!=="GET"&&req.method!=="HEAD";
-  const request=new Request(new URL(req.url||"/",env.APP_ORIGIN||`http://127.0.0.1:${port}`),{method:req.method,headers,signal:controller.signal,...(hasBody?{body:Readable.toWeb(req,{strategy:{size:chunk=>chunk.byteLength}}) as ReadableStream<Uint8Array>,duplex:"half"}:{})} as RequestInit);
+  // Preserve the socket until a cancelled request body receives its error response.
+  const request=new Request(new URL(req.url||"/",env.APP_ORIGIN||`http://127.0.0.1:${port}`),{method:req.method,headers,signal:controller.signal,...(hasBody?{body:Readable.toWeb(req,{strategy:{size:chunk=>chunk.byteLength}}).pipeThrough(new TransformStream(),{preventCancel:true}) as ReadableStream<Uint8Array>,duplex:"half"}:{})} as RequestInit);
   const context=new RouterContextProvider();context.set(runtimeContext,runtime);
   const response=pathname.startsWith("/api/")?await handleApi(request,runtime):handler?await handler(request,context):new Response("API test runtime",{status:404});
   if(request.body&&!request.body.locked) {
     void request.body.pipeTo(new WritableStream()).catch(error=>{if(!req.aborted) console.error("Request body discard failed",error);});
   }
   if(request.signal.aborted) return;
+  if(response.status===413&&!req.complete) res.shouldKeepAlive=false;
   res.statusCode=response.status;res.statusMessage=response.statusText;
   for(const [key,value] of response.headers) {if(key!=="set-cookie") res.setHeader(key,value);}
   const cookies=response.headers.getSetCookie();if(cookies.length) res.setHeader("set-cookie",cookies);
